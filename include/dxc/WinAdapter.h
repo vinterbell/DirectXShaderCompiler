@@ -15,7 +15,9 @@
 #ifndef LLVM_SUPPORT_WIN_ADAPTER_H
 #define LLVM_SUPPORT_WIN_ADAPTER_H
 
-#ifndef _WIN32
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 #include <atomic>
@@ -24,32 +26,12 @@
 #include <cstring>
 #include <cwchar>
 #include <fstream>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
-#endif // __cplusplus
 
-#define COM_NO_WINDOWS_H // needed to inform d3d headers that this isn't windows
-
-//===----------------------------------------------------------------------===//
-//
-//                             Begin: Macro Definitions
-//
-//===----------------------------------------------------------------------===//
-#define C_ASSERT(expr) static_assert((expr), "")
-#define ATLASSERT assert
-
-#define CoTaskMemAlloc malloc
-#define CoTaskMemFree free
-
-#define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
-
-#define _countof(a) (sizeof(a) / sizeof(*(a)))
-
+#ifndef _WIN32
 // If it is GCC, there is no UUID support and we must emulate it.
 // Clang support depends on the -fms-extensions compiler flag.
 #if !defined(__clang__) || !defined(_MSC_EXTENSIONS)
@@ -65,6 +47,596 @@
 #ifdef __EMULATE_UUID
 #define uuid(id)
 #endif // __EMULATE_UUID
+
+#ifdef __EMULATE_UUID
+struct GUID
+#else  // __EMULATE_UUID
+// These specific definitions are required by clang -fms-extensions.
+typedef struct _GUID
+#endif // __EMULATE_UUID
+{
+  uint32_t Data1;
+  uint16_t Data2;
+  uint16_t Data3;
+  uint8_t Data4[8];
+}
+#ifdef __EMULATE_UUID
+;
+#else  // __EMULATE_UUID
+GUID;
+#endif // __EMULATE_UUID
+
+#elif !defined(_MSC_VER)
+#include <guiddef.h>
+
+#define NOATOM 1
+#define NOGDICAPMASKS 1
+#define NOMETAFILE 1
+#define NOOPENFILE 1
+#define NORASTEROPS 1
+#define NOSCROLL 1
+#define NOSOUND 1
+#define NOSYSMETRICS 1
+#define NOWH 1
+#define NOCOMM 1
+#define NOKANJI 1
+#define NOCRYPT 1
+#define NOMCX 1
+#define WIN32_LEAN_AND_MEAN 1
+#define VC_EXTRALEAN 1
+#define NONAMELESSSTRUCT 1
+
+// Map these errors to equivalent errnos.
+#define ERROR_NOT_CAPABLE EPERM
+#define ERROR_UNHANDLED_EXCEPTION EBADF
+
+#define STRSAFE_NO_DEPRECATE
+#include <intsafe.h>
+#include <strsafe.h>
+#include <unknwn.h>
+#undef MemoryFence
+#undef IN
+#undef OUT
+#undef interface
+
+// winnt.h conflicts with Coff.h, this is just a big #undef list.
+//-------------------------------------------------------------
+#undef IMAGE_DOS_SIGNATURE
+#undef IMAGE_OS2_SIGNATURE
+#undef IMAGE_OS2_SIGNATURE_LE
+#undef IMAGE_VXD_SIGNATURE
+#undef IMAGE_NT_SIGNATURE
+#undef IMAGE_SIZEOF_FILE_HEADER
+#undef IMAGE_FILE_RELOCS_STRIPPED
+#undef IMAGE_FILE_EXECUTABLE_IMAGE
+#undef IMAGE_FILE_LINE_NUMS_STRIPPED
+#undef IMAGE_FILE_LOCAL_SYMS_STRIPPED
+#undef IMAGE_FILE_AGGRESIVE_WS_TRIM
+#undef IMAGE_FILE_LARGE_ADDRESS_AWARE
+#undef IMAGE_FILE_BYTES_REVERSED_LO
+#undef IMAGE_FILE_32BIT_MACHINE
+#undef IMAGE_FILE_DEBUG_STRIPPED
+#undef IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP
+#undef IMAGE_FILE_NET_RUN_FROM_SWAP
+#undef IMAGE_FILE_SYSTEM
+#undef IMAGE_FILE_DLL
+#undef IMAGE_FILE_UP_SYSTEM_ONLY
+#undef IMAGE_FILE_BYTES_REVERSED_HI
+#undef IMAGE_FILE_MACHINE_UNKNOWN
+#undef IMAGE_FILE_MACHINE_I386
+#undef IMAGE_FILE_MACHINE_R3000
+#undef IMAGE_FILE_MACHINE_R4000
+#undef IMAGE_FILE_MACHINE_R10000
+#undef IMAGE_FILE_MACHINE_WCEMIPSV2
+#undef IMAGE_FILE_MACHINE_ALPHA
+#undef IMAGE_FILE_MACHINE_SH3
+#undef IMAGE_FILE_MACHINE_SH3DSP
+#undef IMAGE_FILE_MACHINE_SH3E
+#undef IMAGE_FILE_MACHINE_SH4
+#undef IMAGE_FILE_MACHINE_SH5
+#undef IMAGE_FILE_MACHINE_ARM
+#undef IMAGE_FILE_MACHINE_ARMV7
+#undef IMAGE_FILE_MACHINE_ARMNT
+#undef IMAGE_FILE_MACHINE_ARM64
+#undef IMAGE_FILE_MACHINE_THUMB
+#undef IMAGE_FILE_MACHINE_AM33
+#undef IMAGE_FILE_MACHINE_POWERPC
+#undef IMAGE_FILE_MACHINE_POWERPCFP
+#undef IMAGE_FILE_MACHINE_IA64
+#undef IMAGE_FILE_MACHINE_MIPS16
+#undef IMAGE_FILE_MACHINE_ALPHA64
+#undef IMAGE_FILE_MACHINE_MIPSFPU
+#undef IMAGE_FILE_MACHINE_MIPSFPU16
+#undef IMAGE_FILE_MACHINE_AXP64
+#undef IMAGE_FILE_MACHINE_TRICORE
+#undef IMAGE_FILE_MACHINE_CEF
+#undef IMAGE_FILE_MACHINE_EBC
+#undef IMAGE_FILE_MACHINE_AMD64
+#undef IMAGE_FILE_MACHINE_M32R
+#undef IMAGE_FILE_MACHINE_CEE
+#undef IMAGE_NUMBEROF_DIRECTORY_ENTRIES
+#undef IMAGE_SIZEOF_ROM_OPTIONAL_HEADER
+#undef IMAGE_SIZEOF_STD_OPTIONAL_HEADER
+#undef IMAGE_SIZEOF_NT_OPTIONAL32_HEADER
+#undef IMAGE_SIZEOF_NT_OPTIONAL64_HEADER
+#undef IMAGE_NT_OPTIONAL_HDR32_MAGIC
+#undef IMAGE_NT_OPTIONAL_HDR64_MAGIC
+#undef IMAGE_ROM_OPTIONAL_HDR_MAGIC
+#undef IMAGE_SIZEOF_NT_OPTIONAL_HEADER
+#undef IMAGE_NT_OPTIONAL_HDR_MAGIC
+#undef IMAGE_SIZEOF_NT_OPTIONAL_HEADER
+#undef IMAGE_NT_OPTIONAL_HDR_MAGIC
+#undef IMAGE_FIRST_SECTION
+#undef IMAGE_SUBSYSTEM_UNKNOWN
+#undef IMAGE_SUBSYSTEM_NATIVE
+#undef IMAGE_SUBSYSTEM_WINDOWS_GUI
+#undef IMAGE_SUBSYSTEM_WINDOWS_CUI
+#undef IMAGE_SUBSYSTEM_OS2_CUI
+#undef IMAGE_SUBSYSTEM_POSIX_CUI
+#undef IMAGE_SUBSYSTEM_NATIVE_WINDOWS
+#undef IMAGE_SUBSYSTEM_WINDOWS_CE_GUI
+#undef IMAGE_SUBSYSTEM_EFI_APPLICATION
+#undef IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER
+#undef IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER
+#undef IMAGE_SUBSYSTEM_EFI_ROM
+#undef IMAGE_SUBSYSTEM_XBOX
+#undef IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION
+#undef IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA
+#undef IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE
+#undef IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY
+#undef IMAGE_DLLCHARACTERISTICS_NX_COMPAT
+#undef IMAGE_DLLCHARACTERISTICS_NO_ISOLATION
+#undef IMAGE_DLLCHARACTERISTICS_NO_SEH
+#undef IMAGE_DLLCHARACTERISTICS_NO_BIND
+#undef IMAGE_DLLCHARACTERISTICS_APPCONTAINER
+#undef IMAGE_DLLCHARACTERISTICS_WDM_DRIVER
+#undef IMAGE_DLLCHARACTERISTICS_GUARD_CF
+#undef IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE
+#undef IMAGE_DIRECTORY_ENTRY_EXPORT
+#undef IMAGE_DIRECTORY_ENTRY_IMPORT
+#undef IMAGE_DIRECTORY_ENTRY_RESOURCE
+#undef IMAGE_DIRECTORY_ENTRY_EXCEPTION
+#undef IMAGE_DIRECTORY_ENTRY_SECURITY
+#undef IMAGE_DIRECTORY_ENTRY_BASERELOC
+#undef IMAGE_DIRECTORY_ENTRY_DEBUG
+#undef IMAGE_DIRECTORY_ENTRY_ARCHITECTURE
+#undef IMAGE_DIRECTORY_ENTRY_GLOBALPTR
+#undef IMAGE_DIRECTORY_ENTRY_TLS
+#undef IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG
+#undef IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT
+#undef IMAGE_DIRECTORY_ENTRY_IAT
+#undef IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT
+#undef IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR
+#undef IMAGE_SIZEOF_SHORT_NAME
+#undef IMAGE_SIZEOF_SECTION_HEADER
+#undef IMAGE_SCN_TYPE_NO_PAD
+#undef IMAGE_SCN_CNT_CODE
+#undef IMAGE_SCN_CNT_INITIALIZED_DATA
+#undef IMAGE_SCN_CNT_UNINITIALIZED_DATA
+#undef IMAGE_SCN_LNK_OTHER
+#undef IMAGE_SCN_LNK_INFO
+#undef IMAGE_SCN_LNK_REMOVE
+#undef IMAGE_SCN_LNK_COMDAT
+#undef IMAGE_SCN_NO_DEFER_SPEC_EXC
+#undef IMAGE_SCN_GPREL
+#undef IMAGE_SCN_MEM_FARDATA
+#undef IMAGE_SCN_MEM_PURGEABLE
+#undef IMAGE_SCN_MEM_16BIT
+#undef IMAGE_SCN_MEM_LOCKED
+#undef IMAGE_SCN_MEM_PRELOAD
+#undef IMAGE_SCN_ALIGN_1BYTES
+#undef IMAGE_SCN_ALIGN_2BYTES
+#undef IMAGE_SCN_ALIGN_4BYTES
+#undef IMAGE_SCN_ALIGN_8BYTES
+#undef IMAGE_SCN_ALIGN_16BYTES
+#undef IMAGE_SCN_ALIGN_32BYTES
+#undef IMAGE_SCN_ALIGN_64BYTES
+#undef IMAGE_SCN_ALIGN_128BYTES
+#undef IMAGE_SCN_ALIGN_256BYTES
+#undef IMAGE_SCN_ALIGN_512BYTES
+#undef IMAGE_SCN_ALIGN_1024BYTES
+#undef IMAGE_SCN_ALIGN_2048BYTES
+#undef IMAGE_SCN_ALIGN_4096BYTES
+#undef IMAGE_SCN_ALIGN_8192BYTES
+#undef IMAGE_SCN_ALIGN_MASK
+#undef IMAGE_SCN_LNK_NRELOC_OVFL
+#undef IMAGE_SCN_MEM_DISCARDABLE
+#undef IMAGE_SCN_MEM_NOT_CACHED
+#undef IMAGE_SCN_MEM_NOT_PAGED
+#undef IMAGE_SCN_MEM_SHARED
+#undef IMAGE_SCN_MEM_EXECUTE
+#undef IMAGE_SCN_MEM_READ
+#undef IMAGE_SCN_MEM_WRITE
+#undef IMAGE_SCN_SCALE_INDEX
+#undef IMAGE_SIZEOF_SYMBOL
+#undef IMAGE_SYM_UNDEFINED
+#undef IMAGE_SYM_ABSOLUTE
+#undef IMAGE_SYM_DEBUG
+#undef IMAGE_SYM_SECTION_MAX
+#undef IMAGE_SYM_SECTION_MAX_EX
+#undef IMAGE_SYM_TYPE_NULL
+#undef IMAGE_SYM_TYPE_VOID
+#undef IMAGE_SYM_TYPE_CHAR
+#undef IMAGE_SYM_TYPE_SHORT
+#undef IMAGE_SYM_TYPE_INT
+#undef IMAGE_SYM_TYPE_LONG
+#undef IMAGE_SYM_TYPE_FLOAT
+#undef IMAGE_SYM_TYPE_DOUBLE
+#undef IMAGE_SYM_TYPE_STRUCT
+#undef IMAGE_SYM_TYPE_UNION
+#undef IMAGE_SYM_TYPE_ENUM
+#undef IMAGE_SYM_TYPE_MOE
+#undef IMAGE_SYM_TYPE_BYTE
+#undef IMAGE_SYM_TYPE_WORD
+#undef IMAGE_SYM_TYPE_UINT
+#undef IMAGE_SYM_TYPE_DWORD
+#undef IMAGE_SYM_TYPE_PCODE
+#undef IMAGE_SYM_DTYPE_NULL
+#undef IMAGE_SYM_DTYPE_POINTER
+#undef IMAGE_SYM_DTYPE_FUNCTION
+#undef IMAGE_SYM_DTYPE_ARRAY
+#undef IMAGE_SYM_CLASS_END_OF_FUNCTION
+#undef IMAGE_SYM_CLASS_NULL
+#undef IMAGE_SYM_CLASS_AUTOMATIC
+#undef IMAGE_SYM_CLASS_EXTERNAL
+#undef IMAGE_SYM_CLASS_STATIC
+#undef IMAGE_SYM_CLASS_REGISTER
+#undef IMAGE_SYM_CLASS_EXTERNAL_DEF
+#undef IMAGE_SYM_CLASS_LABEL
+#undef IMAGE_SYM_CLASS_UNDEFINED_LABEL
+#undef IMAGE_SYM_CLASS_MEMBER_OF_STRUCT
+#undef IMAGE_SYM_CLASS_ARGUMENT
+#undef IMAGE_SYM_CLASS_STRUCT_TAG
+#undef IMAGE_SYM_CLASS_MEMBER_OF_UNION
+#undef IMAGE_SYM_CLASS_UNION_TAG
+#undef IMAGE_SYM_CLASS_TYPE_DEFINITION
+#undef IMAGE_SYM_CLASS_UNDEFINED_STATIC
+#undef IMAGE_SYM_CLASS_ENUM_TAG
+#undef IMAGE_SYM_CLASS_MEMBER_OF_ENUM
+#undef IMAGE_SYM_CLASS_REGISTER_PARAM
+#undef IMAGE_SYM_CLASS_BIT_FIELD
+#undef IMAGE_SYM_CLASS_FAR_EXTERNAL
+#undef IMAGE_SYM_CLASS_BLOCK
+#undef IMAGE_SYM_CLASS_FUNCTION
+#undef IMAGE_SYM_CLASS_END_OF_STRUCT
+#undef IMAGE_SYM_CLASS_FILE
+#undef IMAGE_SYM_CLASS_SECTION
+#undef IMAGE_SYM_CLASS_WEAK_EXTERNAL
+#undef IMAGE_SYM_CLASS_CLR_TOKEN
+#undef IMAGE_SIZEOF_AUX_SYMBOL
+#undef IMAGE_COMDAT_SELECT_NODUPLICATES
+#undef IMAGE_COMDAT_SELECT_ANY
+#undef IMAGE_COMDAT_SELECT_SAME_SIZE
+#undef IMAGE_COMDAT_SELECT_EXACT_MATCH
+#undef IMAGE_COMDAT_SELECT_ASSOCIATIVE
+#undef IMAGE_COMDAT_SELECT_LARGEST
+#undef IMAGE_COMDAT_SELECT_NEWEST
+#undef IMAGE_WEAK_EXTERN_SEARCH_NOLIBRARY
+#undef IMAGE_WEAK_EXTERN_SEARCH_LIBRARY
+#undef IMAGE_WEAK_EXTERN_SEARCH_ALIAS
+#undef IMAGE_SIZEOF_RELOCATION
+#undef IMAGE_REL_I386_ABSOLUTE
+#undef IMAGE_REL_I386_DIR16
+#undef IMAGE_REL_I386_REL16
+#undef IMAGE_REL_I386_DIR32
+#undef IMAGE_REL_I386_DIR32NB
+#undef IMAGE_REL_I386_SEG12
+#undef IMAGE_REL_I386_SECTION
+#undef IMAGE_REL_I386_SECREL
+#undef IMAGE_REL_I386_TOKEN
+#undef IMAGE_REL_I386_SECREL7
+#undef IMAGE_REL_I386_REL32
+#undef IMAGE_REL_MIPS_ABSOLUTE
+#undef IMAGE_REL_MIPS_REFHALF
+#undef IMAGE_REL_MIPS_REFWORD
+#undef IMAGE_REL_MIPS_JMPADDR
+#undef IMAGE_REL_MIPS_REFHI
+#undef IMAGE_REL_MIPS_REFLO
+#undef IMAGE_REL_MIPS_GPREL
+#undef IMAGE_REL_MIPS_LITERAL
+#undef IMAGE_REL_MIPS_SECTION
+#undef IMAGE_REL_MIPS_SECREL
+#undef IMAGE_REL_MIPS_SECRELLO
+#undef IMAGE_REL_MIPS_SECRELHI
+#undef IMAGE_REL_MIPS_TOKEN
+#undef IMAGE_REL_MIPS_JMPADDR16
+#undef IMAGE_REL_MIPS_REFWORDNB
+#undef IMAGE_REL_MIPS_PAIR
+#undef IMAGE_REL_ALPHA_ABSOLUTE
+#undef IMAGE_REL_ALPHA_REFLONG
+#undef IMAGE_REL_ALPHA_REFQUAD
+#undef IMAGE_REL_ALPHA_GPREL32
+#undef IMAGE_REL_ALPHA_LITERAL
+#undef IMAGE_REL_ALPHA_LITUSE
+#undef IMAGE_REL_ALPHA_GPDISP
+#undef IMAGE_REL_ALPHA_BRADDR
+#undef IMAGE_REL_ALPHA_HINT
+#undef IMAGE_REL_ALPHA_INLINE_REFLONG
+#undef IMAGE_REL_ALPHA_REFHI
+#undef IMAGE_REL_ALPHA_REFLO
+#undef IMAGE_REL_ALPHA_PAIR
+#undef IMAGE_REL_ALPHA_MATCH
+#undef IMAGE_REL_ALPHA_SECTION
+#undef IMAGE_REL_ALPHA_SECREL
+#undef IMAGE_REL_ALPHA_REFLONGNB
+#undef IMAGE_REL_ALPHA_SECRELLO
+#undef IMAGE_REL_ALPHA_SECRELHI
+#undef IMAGE_REL_ALPHA_REFQ3
+#undef IMAGE_REL_ALPHA_REFQ2
+#undef IMAGE_REL_ALPHA_REFQ1
+#undef IMAGE_REL_ALPHA_GPRELLO
+#undef IMAGE_REL_ALPHA_GPRELHI
+#undef IMAGE_REL_PPC_ABSOLUTE
+#undef IMAGE_REL_PPC_ADDR64
+#undef IMAGE_REL_PPC_ADDR32
+#undef IMAGE_REL_PPC_ADDR24
+#undef IMAGE_REL_PPC_ADDR16
+#undef IMAGE_REL_PPC_ADDR14
+#undef IMAGE_REL_PPC_REL24
+#undef IMAGE_REL_PPC_REL14
+#undef IMAGE_REL_PPC_TOCREL16
+#undef IMAGE_REL_PPC_TOCREL14
+#undef IMAGE_REL_PPC_ADDR32NB
+#undef IMAGE_REL_PPC_SECREL
+#undef IMAGE_REL_PPC_SECTION
+#undef IMAGE_REL_PPC_IFGLUE
+#undef IMAGE_REL_PPC_IMGLUE
+#undef IMAGE_REL_PPC_SECREL16
+#undef IMAGE_REL_PPC_REFHI
+#undef IMAGE_REL_PPC_REFLO
+#undef IMAGE_REL_PPC_PAIR
+#undef IMAGE_REL_PPC_SECRELLO
+#undef IMAGE_REL_PPC_SECRELHI
+#undef IMAGE_REL_PPC_GPREL
+#undef IMAGE_REL_PPC_TOKEN
+#undef IMAGE_REL_PPC_TYPEMASK
+#undef IMAGE_REL_PPC_NEG
+#undef IMAGE_REL_PPC_BRTAKEN
+#undef IMAGE_REL_PPC_BRNTAKEN
+#undef IMAGE_REL_PPC_TOCDEFN
+#undef IMAGE_REL_SH3_ABSOLUTE
+#undef IMAGE_REL_SH3_DIRECT16
+#undef IMAGE_REL_SH3_DIRECT32
+#undef IMAGE_REL_SH3_DIRECT8
+#undef IMAGE_REL_SH3_DIRECT8_WORD
+#undef IMAGE_REL_SH3_DIRECT8_LONG
+#undef IMAGE_REL_SH3_DIRECT4
+#undef IMAGE_REL_SH3_DIRECT4_WORD
+#undef IMAGE_REL_SH3_DIRECT4_LONG
+#undef IMAGE_REL_SH3_PCREL8_WORD
+#undef IMAGE_REL_SH3_PCREL8_LONG
+#undef IMAGE_REL_SH3_PCREL12_WORD
+#undef IMAGE_REL_SH3_STARTOF_SECTION
+#undef IMAGE_REL_SH3_SIZEOF_SECTION
+#undef IMAGE_REL_SH3_SECTION
+#undef IMAGE_REL_SH3_SECREL
+#undef IMAGE_REL_SH3_DIRECT32_NB
+#undef IMAGE_REL_SH3_GPREL4_LONG
+#undef IMAGE_REL_SH3_TOKEN
+#undef IMAGE_REL_SHM_PCRELPT
+#undef IMAGE_REL_SHM_REFLO
+#undef IMAGE_REL_SHM_REFHALF
+#undef IMAGE_REL_SHM_RELLO
+#undef IMAGE_REL_SHM_RELHALF
+#undef IMAGE_REL_SHM_PAIR
+#undef IMAGE_REL_SH_NOMODE
+#undef IMAGE_REL_ARM_ABSOLUTE
+#undef IMAGE_REL_ARM_ADDR32
+#undef IMAGE_REL_ARM_ADDR32NB
+#undef IMAGE_REL_ARM_BRANCH24
+#undef IMAGE_REL_ARM_BRANCH11
+#undef IMAGE_REL_ARM_TOKEN
+#undef IMAGE_REL_ARM_GPREL12
+#undef IMAGE_REL_ARM_GPREL7
+#undef IMAGE_REL_ARM_BLX24
+#undef IMAGE_REL_ARM_BLX11
+#undef IMAGE_REL_ARM_SECTION
+#undef IMAGE_REL_ARM_SECREL
+#undef IMAGE_REL_ARM_MOV32A
+#undef IMAGE_REL_ARM_MOV32
+#undef IMAGE_REL_ARM_MOV32T
+#undef IMAGE_REL_THUMB_MOV32
+#undef IMAGE_REL_ARM_BRANCH20T
+#undef IMAGE_REL_THUMB_BRANCH20
+#undef IMAGE_REL_ARM_BRANCH24T
+#undef IMAGE_REL_THUMB_BRANCH24
+#undef IMAGE_REL_ARM_BLX23T
+#undef IMAGE_REL_THUMB_BLX23
+#undef IMAGE_REL_AM_ABSOLUTE
+#undef IMAGE_REL_AM_ADDR32
+#undef IMAGE_REL_AM_ADDR32NB
+#undef IMAGE_REL_AM_CALL32
+#undef IMAGE_REL_AM_FUNCINFO
+#undef IMAGE_REL_AM_REL32_1
+#undef IMAGE_REL_AM_REL32_2
+#undef IMAGE_REL_AM_SECREL
+#undef IMAGE_REL_AM_SECTION
+#undef IMAGE_REL_AM_TOKEN
+#undef IMAGE_REL_AMD64_ABSOLUTE
+#undef IMAGE_REL_AMD64_ADDR64
+#undef IMAGE_REL_AMD64_ADDR32
+#undef IMAGE_REL_AMD64_ADDR32NB
+#undef IMAGE_REL_AMD64_REL32
+#undef IMAGE_REL_AMD64_REL32_1
+#undef IMAGE_REL_AMD64_REL32_2
+#undef IMAGE_REL_AMD64_REL32_3
+#undef IMAGE_REL_AMD64_REL32_4
+#undef IMAGE_REL_AMD64_REL32_5
+#undef IMAGE_REL_AMD64_SECTION
+#undef IMAGE_REL_AMD64_SECREL
+#undef IMAGE_REL_AMD64_SECREL7
+#undef IMAGE_REL_AMD64_TOKEN
+#undef IMAGE_REL_AMD64_SREL32
+#undef IMAGE_REL_AMD64_PAIR
+#undef IMAGE_REL_AMD64_SSPAN32
+#undef IMAGE_REL_IA64_ABSOLUTE
+#undef IMAGE_REL_IA64_IMM14
+#undef IMAGE_REL_IA64_IMM22
+#undef IMAGE_REL_IA64_IMM64
+#undef IMAGE_REL_IA64_DIR32
+#undef IMAGE_REL_IA64_DIR64
+#undef IMAGE_REL_IA64_PCREL21B
+#undef IMAGE_REL_IA64_PCREL21M
+#undef IMAGE_REL_IA64_PCREL21F
+#undef IMAGE_REL_IA64_GPREL22
+#undef IMAGE_REL_IA64_LTOFF22
+#undef IMAGE_REL_IA64_SECTION
+#undef IMAGE_REL_IA64_SECREL22
+#undef IMAGE_REL_IA64_SECREL64I
+#undef IMAGE_REL_IA64_SECREL32
+#undef IMAGE_REL_IA64_DIR32NB
+#undef IMAGE_REL_IA64_SREL14
+#undef IMAGE_REL_IA64_SREL22
+#undef IMAGE_REL_IA64_SREL32
+#undef IMAGE_REL_IA64_UREL32
+#undef IMAGE_REL_IA64_PCREL60X
+#undef IMAGE_REL_IA64_PCREL60B
+#undef IMAGE_REL_IA64_PCREL60F
+#undef IMAGE_REL_IA64_PCREL60I
+#undef IMAGE_REL_IA64_PCREL60M
+#undef IMAGE_REL_IA64_IMMGPREL64
+#undef IMAGE_REL_IA64_TOKEN
+#undef IMAGE_REL_IA64_GPREL32
+#undef IMAGE_REL_IA64_ADDEND
+#undef IMAGE_REL_CEF_ABSOLUTE
+#undef IMAGE_REL_CEF_ADDR32
+#undef IMAGE_REL_CEF_ADDR64
+#undef IMAGE_REL_CEF_ADDR32NB
+#undef IMAGE_REL_CEF_SECTION
+#undef IMAGE_REL_CEF_SECREL
+#undef IMAGE_REL_CEF_TOKEN
+#undef IMAGE_REL_CEE_ABSOLUTE
+#undef IMAGE_REL_CEE_ADDR32
+#undef IMAGE_REL_CEE_ADDR64
+#undef IMAGE_REL_CEE_ADDR32NB
+#undef IMAGE_REL_CEE_SECTION
+#undef IMAGE_REL_CEE_SECREL
+#undef IMAGE_REL_CEE_TOKEN
+#undef IMAGE_REL_M32R_ABSOLUTE
+#undef IMAGE_REL_M32R_ADDR32
+#undef IMAGE_REL_M32R_ADDR32NB
+#undef IMAGE_REL_M32R_ADDR24
+#undef IMAGE_REL_M32R_GPREL16
+#undef IMAGE_REL_M32R_PCREL24
+#undef IMAGE_REL_M32R_PCREL16
+#undef IMAGE_REL_M32R_PCREL8
+#undef IMAGE_REL_M32R_REFHALF
+#undef IMAGE_REL_M32R_REFHI
+#undef IMAGE_REL_M32R_REFLO
+#undef IMAGE_REL_M32R_PAIR
+#undef IMAGE_REL_M32R_SECTION
+#undef IMAGE_REL_M32R_SECREL32
+#undef IMAGE_REL_M32R_TOKEN
+#undef IMAGE_REL_EBC_ABSOLUTE
+#undef IMAGE_REL_EBC_ADDR32NB
+#undef IMAGE_REL_EBC_REL32
+#undef IMAGE_REL_EBC_SECTION
+#undef IMAGE_REL_EBC_SECREL
+#undef IMAGE_SIZEOF_BASE_RELOCATION
+#undef IMAGE_REL_BASED_ABSOLUTE
+#undef IMAGE_REL_BASED_HIGH
+#undef IMAGE_REL_BASED_LOW
+#undef IMAGE_REL_BASED_HIGHLOW
+#undef IMAGE_REL_BASED_HIGHADJ
+#undef IMAGE_REL_BASED_MIPS_JMPADDR
+#undef IMAGE_REL_BASED_ARM_MOV32
+#undef IMAGE_REL_BASED_THUMB_MOV32
+#undef IMAGE_REL_BASED_MIPS_JMPADDR16
+#undef IMAGE_REL_BASED_IA64_IMM64
+#undef IMAGE_REL_BASED_DIR64
+#undef IMAGE_ARCHIVE_START_SIZE
+#undef IMAGE_ARCHIVE_START
+#undef IMAGE_ARCHIVE_END
+#undef IMAGE_ARCHIVE_PAD
+#undef IMAGE_ARCHIVE_LINKER_MEMBER
+#undef IMAGE_ARCHIVE_LONGNAMES_MEMBER
+#undef IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR
+#undef IMAGE_ORDINAL_FLAG64
+#undef IMAGE_ORDINAL_FLAG32
+#undef IMAGE_ORDINAL64
+#undef IMAGE_ORDINAL32
+#undef IMAGE_SNAP_BY_ORDINAL64
+#undef IMAGE_SNAP_BY_ORDINAL32
+#undef IMAGE_ORDINAL_FLAG
+#undef IMAGE_ORDINAL
+#undef IMAGE_SNAP_BY_ORDINAL
+#undef IMAGE_ORDINAL_FLAG
+#undef IMAGE_ORDINAL
+#undef IMAGE_SNAP_BY_ORDINAL
+#undef IMAGE_RESOURCE_NAME_IS_STRING
+#undef IMAGE_RESOURCE_DATA_IS_DIRECTORY
+#undef IMAGE_DEBUG_TYPE_UNKNOWN
+#undef IMAGE_DEBUG_TYPE_COFF
+#undef IMAGE_DEBUG_TYPE_CODEVIEW
+#undef IMAGE_DEBUG_TYPE_FPO
+#undef IMAGE_DEBUG_TYPE_MISC
+#undef IMAGE_DEBUG_TYPE_EXCEPTION
+#undef IMAGE_DEBUG_TYPE_FIXUP
+#undef IMAGE_DEBUG_TYPE_OMAP_TO_SRC
+#undef IMAGE_DEBUG_TYPE_OMAP_FROM_SRC
+#undef IMAGE_DEBUG_TYPE_BORLAND
+#undef IMAGE_DEBUG_TYPE_RESERVED10
+#undef IMAGE_DEBUG_TYPE_CLSID
+#undef IMAGE_DEBUG_MISC_EXENAME
+#undef IMAGE_SEPARATE_DEBUG_SIGNATURE
+#undef IMAGE_SEPARATE_DEBUG_FLAGS_MASK
+#undef IMAGE_SEPARATE_DEBUG_MISMATCH
+#endif
+
+#ifndef _MSC_VER
+// The following macros are defined to facilitate the lack of 'uuid' on Linux.
+
+constexpr uint8_t nybble_from_hex(char c) {
+  return ((c >= '0' && c <= '9')
+              ? (c - '0')
+              : ((c >= 'a' && c <= 'f')
+                     ? (c - 'a' + 10)
+                     : ((c >= 'A' && c <= 'F') ? (c - 'A' + 10)
+                                               : /* Should be an error */ -1)));
+}
+
+constexpr uint8_t byte_from_hex(char c1, char c2) {
+  return nybble_from_hex(c1) << 4 | nybble_from_hex(c2);
+}
+
+constexpr uint8_t byte_from_hexstr(const char str[2]) {
+  return nybble_from_hex(str[0]) << 4 | nybble_from_hex(str[1]);
+}
+
+constexpr GUID guid_from_string(const char str[37]) {
+  return GUID{static_cast<uint32_t>(byte_from_hexstr(str)) << 24 |
+                  static_cast<uint32_t>(byte_from_hexstr(str + 2)) << 16 |
+                  static_cast<uint32_t>(byte_from_hexstr(str + 4)) << 8 |
+                  byte_from_hexstr(str + 6),
+              static_cast<uint16_t>(
+                  static_cast<uint16_t>(byte_from_hexstr(str + 9)) << 8 |
+                  byte_from_hexstr(str + 11)),
+              static_cast<uint16_t>(
+                  static_cast<uint16_t>(byte_from_hexstr(str + 14)) << 8 |
+                  byte_from_hexstr(str + 16)),
+              {byte_from_hexstr(str + 19), byte_from_hexstr(str + 21),
+               byte_from_hexstr(str + 24), byte_from_hexstr(str + 26),
+               byte_from_hexstr(str + 28), byte_from_hexstr(str + 30),
+               byte_from_hexstr(str + 32), byte_from_hexstr(str + 34)}};
+}
+#endif // _MSC_VER
+
+#ifndef _WIN32
+#define COM_NO_WINDOWS_H // needed to inform d3d headers that this isn't windows
+
+//===----------------------------------------------------------------------===//
+//
+//                             Begin: Macro Definitions
+//
+//===----------------------------------------------------------------------===//
+#define C_ASSERT(expr) static_assert((expr), "")
+
+#define CoTaskMemAlloc malloc
+#define CoTaskMemFree free
+
+#define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
+
+#define _countof(a) (sizeof(a) / sizeof(*(a)))
 
 #define STDMETHODCALLTYPE
 #define STDMETHODIMP_(type) type STDMETHODCALLTYPE
@@ -103,7 +675,7 @@
 // conversion that throws exceptions for overflow cases.
 #define UIntToInt(uint_arg, int_ptr_arg) *int_ptr_arg = uint_arg
 
-#define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
+#define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR) - 1)
 
 // Use errno to implement {Get|Set}LastError
 #define GetLastError() errno
@@ -140,7 +712,7 @@
 
 #define FILE_ATTRIBUTE_NORMAL 0x00000080
 #define FILE_ATTRIBUTE_DIRECTORY 0x00000010
-#define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
+#define INVALID_FILE_ATTRIBUTES ((DWORD) - 1)
 
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
@@ -195,23 +767,6 @@
 
 #define OutputDebugStringW(msg) fputws(msg, stderr)
 
-#define OutputDebugStringA(msg) fputs(msg, stderr)
-#define OutputDebugFormatA(...) fprintf(stderr, __VA_ARGS__)
-
-// Event Tracing for Windows (ETW) provides application programmers the ability
-// to start and stop event tracing sessions, instrument an application to
-// provide trace events, and consume trace events.
-#define DxcEtw_DXCompilerCreateInstance_Start()
-#define DxcEtw_DXCompilerCreateInstance_Stop(hr)
-#define DxcEtw_DXCompilerCompile_Start()
-#define DxcEtw_DXCompilerCompile_Stop(hr)
-#define DxcEtw_DXCompilerDisassemble_Start()
-#define DxcEtw_DXCompilerDisassemble_Stop(hr)
-#define DxcEtw_DXCompilerPreprocess_Start()
-#define DxcEtw_DXCompilerPreprocess_Stop(hr)
-#define DxcEtw_DxcValidation_Start()
-#define DxcEtw_DxcValidation_Stop(hr)
-
 #define UInt32Add UIntAdd
 #define Int32ToUInt32 IntToUInt
 
@@ -235,7 +790,6 @@
 
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr) (((HRESULT)(hr)) < 0)
-#define DXC_FAILED(hr) (((HRESULT)(hr)) < 0)
 
 #define HRESULT_FROM_WIN32(x)                                                  \
   (HRESULT)(x) <= 0 ? (HRESULT)(x)                                             \
@@ -294,8 +848,6 @@
 //                             Begin: Type Definitions
 //
 //===----------------------------------------------------------------------===//
-
-#ifdef __cplusplus
 
 typedef unsigned char BYTE, UINT8;
 typedef unsigned char *LPBYTE;
@@ -363,29 +915,12 @@ DECLARE_HANDLE(HINSTANCE);
 
 typedef void *HMODULE;
 
-#define STD_INPUT_HANDLE ((DWORD)-10)
-#define STD_OUTPUT_HANDLE ((DWORD)-11)
-#define STD_ERROR_HANDLE ((DWORD)-12)
+#define STD_INPUT_HANDLE ((DWORD) - 10)
+#define STD_OUTPUT_HANDLE ((DWORD) - 11)
+#define STD_ERROR_HANDLE ((DWORD) - 12)
 
 //===--------------------- ID Types and Macros for COM --------------------===//
 
-#ifdef __EMULATE_UUID
-struct GUID
-#else  // __EMULATE_UUID
-// These specific definitions are required by clang -fms-extensions.
-typedef struct _GUID
-#endif // __EMULATE_UUID
-{
-  uint32_t Data1;
-  uint16_t Data2;
-  uint16_t Data3;
-  uint8_t Data4[8];
-}
-#ifdef __EMULATE_UUID
-;
-#else  // __EMULATE_UUID
-GUID;
-#endif // __EMULATE_UUID
 typedef GUID CLSID;
 typedef const GUID &REFGUID;
 typedef const GUID &REFCLSID;
@@ -497,40 +1032,6 @@ enum tagSTATFLAG {
 
 // The following macros are defined to facilitate the lack of 'uuid' on Linux.
 
-constexpr uint8_t nybble_from_hex(char c) {
-  return ((c >= '0' && c <= '9')
-              ? (c - '0')
-              : ((c >= 'a' && c <= 'f')
-                     ? (c - 'a' + 10)
-                     : ((c >= 'A' && c <= 'F') ? (c - 'A' + 10)
-                                               : /* Should be an error */ -1)));
-}
-
-constexpr uint8_t byte_from_hex(char c1, char c2) {
-  return nybble_from_hex(c1) << 4 | nybble_from_hex(c2);
-}
-
-constexpr uint8_t byte_from_hexstr(const char str[2]) {
-  return nybble_from_hex(str[0]) << 4 | nybble_from_hex(str[1]);
-}
-
-constexpr GUID guid_from_string(const char str[37]) {
-  return GUID{static_cast<uint32_t>(byte_from_hexstr(str)) << 24 |
-                  static_cast<uint32_t>(byte_from_hexstr(str + 2)) << 16 |
-                  static_cast<uint32_t>(byte_from_hexstr(str + 4)) << 8 |
-                  byte_from_hexstr(str + 6),
-              static_cast<uint16_t>(
-                  static_cast<uint16_t>(byte_from_hexstr(str + 9)) << 8 |
-                  byte_from_hexstr(str + 11)),
-              static_cast<uint16_t>(
-                  static_cast<uint16_t>(byte_from_hexstr(str + 14)) << 8 |
-                  byte_from_hexstr(str + 16)),
-              {byte_from_hexstr(str + 19), byte_from_hexstr(str + 21),
-               byte_from_hexstr(str + 24), byte_from_hexstr(str + 26),
-               byte_from_hexstr(str + 28), byte_from_hexstr(str + 30),
-               byte_from_hexstr(str + 32), byte_from_hexstr(str + 34)}};
-}
-
 template <typename interface> inline GUID __emulated_uuidof();
 
 #define CROSS_PLATFORM_UUIDOF(interface, spec)                                 \
@@ -572,7 +1073,7 @@ template <typename T> inline void **IID_PPV_ARGS_Helper(T **pp) {
 
 CROSS_PLATFORM_UUIDOF(IUnknown, "00000000-0000-0000-C000-000000000046")
 struct IUnknown {
-  IUnknown(){};
+  IUnknown() {};
   virtual HRESULT QueryInterface(REFIID riid, void **ppvObject) = 0;
   virtual ULONG AddRef() = 0;
   virtual ULONG Release() = 0;
@@ -631,8 +1132,62 @@ CROSS_PLATFORM_UUIDOF(ID3D12LibraryReflection,
 CROSS_PLATFORM_UUIDOF(ID3D12ShaderReflection,
                       "5A58797D-A72C-478D-8BA2-EFC6B0EFE88E")
 
-//===--------------------- COM Pointer Types ------------------------------===//
+//===--------------------------- BSTR Allocation --------------------------===//
 
+void SysFreeString(BSTR bstrString);
+// Allocate string with length prefix
+BSTR SysAllocStringLen(const OLECHAR *strIn, UINT ui);
+
+//===--------------------------- BSTR Length ------------------------------===//
+unsigned int SysStringLen(const BSTR bstrString);
+
+//===--------------------- UTF-8 Related Types ----------------------------===//
+
+// Code Page
+#define CP_ACP 0
+#define CP_UTF8 65001 // UTF-8 translation.
+
+#endif
+
+#ifndef CROSS_PLATFORM_UUIDOF
+// Warning: This macro exists in dxcapi.h as well
+#define CROSS_PLATFORM_UUIDOF(interface, spec)                                 \
+  extern "C++" {                                                               \
+  struct __declspec(uuid(spec)) interface;                                     \
+  template<> struct __mingw_uuidof_s<interface> {                              \
+    static constexpr IID __uuid_inst = guid_from_string(spec);                 \
+  };                                                                           \
+  template <> constexpr const GUID &__mingw_uuidof<interface>() {              \
+    return __mingw_uuidof_s<interface>::__uuid_inst;                           \
+  }                                                                            \
+  template <> constexpr const GUID &__mingw_uuidof<interface *>() {            \
+    return __mingw_uuidof_s<interface>::__uuid_inst;                           \
+  }                                                                            \
+  }
+#endif
+
+#if !defined(_MSC_VER)
+#define DXC_FAILED(hr) (((HRESULT)(hr)) < 0)
+#define ATLASSERT assert
+
+// Event Tracing for Windows (ETW) provides application programmers the ability
+// to start and stop event tracing sessions, instrument an application to
+// provide trace events, and consume trace events.
+#define DxcEtw_DXCompilerCreateInstance_Start()
+#define DxcEtw_DXCompilerCreateInstance_Stop(hr)
+#define DxcEtw_DXCompilerCompile_Start()
+#define DxcEtw_DXCompilerCompile_Stop(hr)
+#define DxcEtw_DXCompilerDisassemble_Start()
+#define DxcEtw_DXCompilerDisassemble_Stop(hr)
+#define DxcEtw_DXCompilerPreprocess_Start()
+#define DxcEtw_DXCompilerPreprocess_Stop(hr)
+#define DxcEtw_DxcValidation_Start()
+#define DxcEtw_DxcValidation_Stop(hr)
+
+#define OutputDebugStringA(msg) fputs(msg, stderr)
+#define OutputDebugFormatA(...) fprintf(stderr, __VA_ARGS__)
+
+//===--------------------- COM Pointer Types ------------------------------===//
 class CAllocator {
 public:
   static void *Reallocate(void *p, size_t nBytes) throw();
@@ -898,21 +1453,6 @@ public:
 
 #define CComHeapPtr CHeapPtr
 
-//===--------------------------- BSTR Allocation --------------------------===//
-
-void SysFreeString(BSTR bstrString);
-// Allocate string with length prefix
-BSTR SysAllocStringLen(const OLECHAR *strIn, UINT ui);
-
-//===--------------------------- BSTR Length ------------------------------===//
-unsigned int SysStringLen(const BSTR bstrString);
-
-//===--------------------- UTF-8 Related Types ----------------------------===//
-
-// Code Page
-#define CP_ACP 0
-#define CP_UTF8 65001 // UTF-8 translation.
-
 // RAII style mechanism for setting/unsetting a locale for the specified Windows
 // codepage
 class ScopedLocale {
@@ -1001,7 +1541,7 @@ private:
 class CComBSTR {
 public:
   BSTR m_str;
-  CComBSTR() : m_str(nullptr){};
+  CComBSTR() : m_str(nullptr) {};
   CComBSTR(int nSize, LPCWSTR sz);
   ~CComBSTR() throw() { SysFreeString(m_str); }
   unsigned int Length() const throw() { return SysStringLen(m_str); }
@@ -1032,9 +1572,7 @@ public:
   WArgV(int argc, const char **argv);
   const wchar_t **argv() { return WCharPtrVector.data(); }
 };
+#endif // !defined(_MSC_VER)
 
 #endif // __cplusplus
-
-#endif // _WIN32
-
 #endif // LLVM_SUPPORT_WIN_ADAPTER_H

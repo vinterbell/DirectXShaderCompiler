@@ -62,16 +62,17 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
-#ifdef _WIN32
-#include <comdef.h>
-#include <dia2.h>
-#endif
+#include "llvm/llvm_assert/assert.h"
+// #ifdef _WIN32
+// #include <comdef.h>
+// #include <dia2.h>
+// #endif
 #include <algorithm>
 #include <unordered_map>
 
-#ifdef _WIN32
-#pragma comment(lib, "version.lib")
-#endif
+// #ifdef _WIN32
+// #pragma comment(lib, "version.lib")
+// #endif
 
 // SPIRV Change Starts
 #ifdef ENABLE_SPIRV_CODEGEN
@@ -138,12 +139,12 @@ private:
                                   IDxcBlob **ppResult);
 
 // Dia is only supported on Windows.
-#ifdef _WIN32
-  // TODO : Refactor two functions below. There are duplicate functions in
-  // DxcContext in dxa.cpp
-  HRESULT GetDxcDiaTable(IDxcLibrary *pLibrary, IDxcBlob *pTargetBlob,
-                         IDiaTable **ppTable, LPCWSTR tableName);
-#endif // _WIN32
+// #ifdef _WIN32
+//   // TODO : Refactor two functions below. There are duplicate functions in
+//   // DxcContext in dxa.cpp
+//   HRESULT GetDxcDiaTable(IDxcLibrary *pLibrary, IDxcBlob *pTargetBlob,
+//                          IDiaTable **ppTable, LPCWSTR tableName);
+// #endif // _WIN32
 
   HRESULT FindModuleBlob(hlsl::DxilFourCC fourCC, IDxcBlob *pSource,
                          IDxcLibrary *pLibrary, IDxcBlob **ppTargetBlob);
@@ -829,8 +830,8 @@ int DxcContext::Compile() {
       args.push_back(L"-ast-dump");
 
     CComPtr<IDxcLibrary> pLibrary;
-    IFT(CreateInstance(CLSID_DxcLibrary, &pLibrary));
-    IFT(CreateInstance(CLSID_DxcCompiler, &pCompiler));
+    IFTMSG(CreateInstance(CLSID_DxcLibrary, &pLibrary), "Failed to create DXC library.");
+    IFTMSG(CreateInstance(CLSID_DxcCompiler, &pCompiler), "Failed to create DXC compiler.");
     ReadFileIntoBlob(m_dxcSupport, StringRefWide(m_Opts.InputFile), &pSource);
     IFTARG(pSource->GetBufferSize() >= 4);
 
@@ -839,7 +840,8 @@ int DxcContext::Compile() {
                 &pCompileResult);
     } else {
       CComPtr<IDxcIncludeHandler> pIncludeHandler;
-      IFT(pLibrary->CreateIncludeHandler(&pIncludeHandler));
+      IFTMSG(pLibrary->CreateIncludeHandler(&pIncludeHandler),
+             "Failed to create include handler.");
 
       // Upgrade profile to 6.0 version from minimum recognized shader model
       llvm::StringRef TargetProfile = m_Opts.TargetProfile;
@@ -1149,66 +1151,66 @@ HRESULT DxcContext::FindModuleBlob(hlsl::DxilFourCC fourCC, IDxcBlob *pSource,
 
 // This function is currently only supported on Windows due to usage of
 // IDiaTable.
-#ifdef _WIN32
-// TODO : There is an identical code in DxaContext in Dxa.cpp. Refactor this
-// function.
-HRESULT DxcContext::GetDxcDiaTable(IDxcLibrary *pLibrary, IDxcBlob *pTargetBlob,
-                                   IDiaTable **ppTable, LPCWSTR tableName) {
-  if (!pLibrary || !pTargetBlob || !ppTable)
-    return E_INVALIDARG;
-  CComPtr<IDiaDataSource> pDataSource;
-  CComPtr<IStream> pSourceStream;
-  CComPtr<IDiaSession> pSession;
-  CComPtr<IDiaEnumTables> pEnumTables;
-  IFT(CreateInstance(CLSID_DxcDiaDataSource, &pDataSource));
-  IFT(pLibrary->CreateStreamFromBlobReadOnly(pTargetBlob, &pSourceStream));
-  IFT(pDataSource->loadDataFromIStream(pSourceStream));
-  IFT(pDataSource->openSession(&pSession));
-  IFT(pSession->getEnumTables(&pEnumTables));
-  CComPtr<IDiaTable> pTable;
-  for (;;) {
-    ULONG fetched;
-    pTable.Release();
-    IFT(pEnumTables->Next(1, &pTable, &fetched));
-    if (fetched == 0) {
-      pTable.Release();
-      break;
-    }
-    CComBSTR name;
-    IFT(pTable->get_name(&name));
-    if (wcscmp(name, tableName) == 0) {
-      break;
-    }
-  }
-  *ppTable = pTable.Detach();
-  return S_OK;
-}
-#endif // _WIN32
+// #ifdef _WIN32
+// // TODO : There is an identical code in DxaContext in Dxa.cpp. Refactor this
+// // function.
+// HRESULT DxcContext::GetDxcDiaTable(IDxcLibrary *pLibrary, IDxcBlob *pTargetBlob,
+//                                    IDiaTable **ppTable, LPCWSTR tableName) {
+//   if (!pLibrary || !pTargetBlob || !ppTable)
+//     return E_INVALIDARG;
+//   CComPtr<IDiaDataSource> pDataSource;
+//   CComPtr<IStream> pSourceStream;
+//   CComPtr<IDiaSession> pSession;
+//   CComPtr<IDiaEnumTables> pEnumTables;
+//   IFT(CreateInstance(CLSID_DxcDiaDataSource, &pDataSource));
+//   IFT(pLibrary->CreateStreamFromBlobReadOnly(pTargetBlob, &pSourceStream));
+//   IFT(pDataSource->loadDataFromIStream(pSourceStream));
+//   IFT(pDataSource->openSession(&pSession));
+//   IFT(pSession->getEnumTables(&pEnumTables));
+//   CComPtr<IDiaTable> pTable;
+//   for (;;) {
+//     ULONG fetched;
+//     pTable.Release();
+//     IFT(pEnumTables->Next(1, &pTable, &fetched));
+//     if (fetched == 0) {
+//       pTable.Release();
+//       break;
+//     }
+//     CComBSTR name;
+//     IFT(pTable->get_name(&name));
+//     if (wcscmp(name, tableName) == 0) {
+//       break;
+//     }
+//   }
+//   *ppTable = pTable.Detach();
+//   return S_OK;
+// }
+// #endif // _WIN32
 
 bool GetDLLFileVersionInfo(const char *dllPath, unsigned int *version) {
   // This function is used to get version information from the DLL file.
   // This information in is not available through a Unix interface.
-#ifdef _WIN32
-  DWORD dwVerHnd = 0;
-  DWORD size = GetFileVersionInfoSize(dllPath, &dwVerHnd);
-  if (size == 0)
-    return false;
-  std::unique_ptr<BYTE[]> VfInfo(new BYTE[size]);
-  if (GetFileVersionInfo(dllPath, NULL, size, VfInfo.get())) {
-    LPVOID versionInfo;
-    UINT size;
-    if (VerQueryValue(VfInfo.get(), "\\", &versionInfo, &size)) {
-      if (size >= sizeof(VS_FIXEDFILEINFO)) {
-        VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)versionInfo;
-        version[0] = (verInfo->dwFileVersionMS >> 16) & 0xffff;
-        version[1] = (verInfo->dwFileVersionMS >> 0) & 0xffff;
-        version[2] = (verInfo->dwFileVersionLS >> 16) & 0xffff;
-        version[3] = (verInfo->dwFileVersionLS >> 0) & 0xffff;
-        return true;
-      }
-    }
-  }
-#endif // _WIN32
+// #ifdef _WIN32
+//   DWORD dwVerHnd = 0;
+//   DWORD size = GetFileVersionInfoSize(dllPath, &dwVerHnd);
+//   if (size == 0)
+//     return false;
+//   std::unique_ptr<BYTE[]> VfInfo(new BYTE[size]);
+//   if (GetFileVersionInfo(dllPath, NULL, size, VfInfo.get())) {
+//     LPVOID versionInfo;
+//     UINT size;
+//     if (VerQueryValue(VfInfo.get(), "\\", &versionInfo, &size)) {
+//       if (size >= sizeof(VS_FIXEDFILEINFO)) {
+//         VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)versionInfo;
+//         version[0] = (verInfo->dwFileVersionMS >> 16) & 0xffff;
+//         version[1] = (verInfo->dwFileVersionMS >> 0) & 0xffff;
+//         version[2] = (verInfo->dwFileVersionLS >> 16) & 0xffff;
+//         version[3] = (verInfo->dwFileVersionLS >> 0) & 0xffff;
+//         return true;
+//       }
+//     }
+//   }
+// #endif // _WIN32
   return false;
 }
 

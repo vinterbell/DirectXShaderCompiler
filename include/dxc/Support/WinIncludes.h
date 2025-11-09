@@ -63,7 +63,19 @@ template <class T> void swap(CComHeapPtr<T> &a, CComHeapPtr<T> &b) {
 
 #else // _MSC_VER
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#define NOMINMAX 1
+#include <strsafe.h>
+#endif
+
 #include "dxc/WinAdapter.h"
+
+#ifdef _WIN32
+#undef MemoryFence
+#undef interface
+#undef ReplaceText
+#endif
 
 #ifdef __cplusplus
 #if !defined(DEFINE_ENUM_FLAG_OPERATORS)

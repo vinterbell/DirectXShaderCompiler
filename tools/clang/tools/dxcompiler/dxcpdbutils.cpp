@@ -48,8 +48,8 @@
 #include <vector>
 
 #ifdef _WIN32
-#include "dxc/dxcpix.h"
-#include <dia2.h>
+// #include "dxc/dxcpix.h"
+// #include <dia2.h>
 #endif
 
 using namespace dxc;
@@ -273,11 +273,11 @@ public:
 };
 
 struct DxcPdbUtils : public IDxcPdbUtils2
-#ifdef _WIN32
-    // Skip Pix debug info on linux for dia dependence.
-    ,
-                     public IDxcPixDxilDebugInfoFactory
-#endif
+// #ifdef _WIN32
+//     // Skip Pix debug info on linux for dia dependence.
+//     ,
+//                      public IDxcPixDxilDebugInfoFactory
+// #endif
 {
 private:
   // Making the adapter and this interface the same object and share reference
@@ -843,13 +843,13 @@ public:
 
   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid,
                                            void **ppvObject) override {
-#ifdef _WIN32
-    HRESULT hr =
-        DoBasicQueryInterface<IDxcPdbUtils2, IDxcPixDxilDebugInfoFactory>(
-            this, iid, ppvObject);
-#else
+// #ifdef _WIN32
+//     HRESULT hr =
+//         DoBasicQueryInterface<IDxcPdbUtils2, IDxcPixDxilDebugInfoFactory>(
+//             this, iid, ppvObject);
+// #else
     HRESULT hr = DoBasicQueryInterface<IDxcPdbUtils2>(this, iid, ppvObject);
-#endif
+// #endif
     if (FAILED(hr)) {
       return DoBasicQueryInterface<IDxcPdbUtils>(&m_Adapter, iid, ppvObject);
     }
@@ -1071,38 +1071,38 @@ public:
     return CopyBlobWide(m_Name, ppResult);
   }
 
-#ifdef _WIN32
-  virtual STDMETHODIMP
-  NewDxcPixDxilDebugInfo(IDxcPixDxilDebugInfo **ppDxilDebugInfo) override {
-    if (!m_pDebugProgramBlob)
-      return E_FAIL;
+// #ifdef _WIN32
+//   virtual STDMETHODIMP
+//   NewDxcPixDxilDebugInfo(IDxcPixDxilDebugInfo **ppDxilDebugInfo) override {
+//     if (!m_pDebugProgramBlob)
+//       return E_FAIL;
 
-    DxcThreadMalloc TM(m_pMalloc);
+//     DxcThreadMalloc TM(m_pMalloc);
 
-    CComPtr<IDiaDataSource> pDataSource;
-    IFR(DxcCreateInstance2(m_pMalloc, CLSID_DxcDiaDataSource,
-                           IID_PPV_ARGS(&pDataSource)));
+//     CComPtr<IDiaDataSource> pDataSource;
+//     IFR(DxcCreateInstance2(m_pMalloc, CLSID_DxcDiaDataSource,
+//                            IID_PPV_ARGS(&pDataSource)));
 
-    CComPtr<IStream> pStream;
-    IFR(hlsl::CreateReadOnlyBlobStream(m_pDebugProgramBlob, &pStream));
+//     CComPtr<IStream> pStream;
+//     IFR(hlsl::CreateReadOnlyBlobStream(m_pDebugProgramBlob, &pStream));
 
-    IFR(pDataSource->loadDataFromIStream(pStream));
+//     IFR(pDataSource->loadDataFromIStream(pStream));
 
-    CComPtr<IDiaSession> pSession;
-    IFR(pDataSource->openSession(&pSession));
+//     CComPtr<IDiaSession> pSession;
+//     IFR(pDataSource->openSession(&pSession));
 
-    CComPtr<IDxcPixDxilDebugInfoFactory> pFactory;
-    IFR(pSession.QueryInterface(&pFactory));
+//     CComPtr<IDxcPixDxilDebugInfoFactory> pFactory;
+//     IFR(pSession.QueryInterface(&pFactory));
 
-    return pFactory->NewDxcPixDxilDebugInfo(ppDxilDebugInfo);
-  }
+//     return pFactory->NewDxcPixDxilDebugInfo(ppDxilDebugInfo);
+//   }
 
-  virtual STDMETHODIMP NewDxcPixCompilationInfo(
-      IDxcPixCompilationInfo **ppCompilationInfo) override {
-    return E_NOTIMPL;
-  }
+//   virtual STDMETHODIMP NewDxcPixCompilationInfo(
+//       IDxcPixCompilationInfo **ppCompilationInfo) override {
+//     return E_NOTIMPL;
+//   }
 
-#endif
+// #endif
 
   virtual HRESULT STDMETHODCALLTYPE
   GetVersionInfo(IDxcVersionInfo **ppVersionInfo) override {

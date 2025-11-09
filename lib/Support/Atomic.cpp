@@ -32,7 +32,7 @@ void sys::MemoryFence() {
 #else
 #  if defined(GNU_ATOMICS)
   __sync_synchronize();
-#  elif defined(_MSC_VER)
+#  elif defined(_WIN32)
   MemoryBarrier();
 #  else
 # error No memory fence implementation for your platform!

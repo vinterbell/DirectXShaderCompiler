@@ -7,9 +7,13 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "assert.h"
+#include "llvm/llvm_assert/assert.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/raw_ostream.h"
+
+#ifdef __clang__ // Zig
+#define OutputDebugFormatA(...) fprintf(stderr, __VA_ARGS__)
+#endif // __clang__ // Zig
 
 #if defined(LLVM_ASSERTIONS_TRAP) || !defined(WIN32)
 namespace {

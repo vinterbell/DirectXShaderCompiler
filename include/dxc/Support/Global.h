@@ -11,7 +11,7 @@
 
 #pragma once
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 // Redeclare some macros to not depend on winerror.h
 #define DXC_FAILED(hr) (((HRESULT)(hr)) < 0)
 #ifndef _HRESULT_DEFINED
@@ -22,7 +22,7 @@ typedef long HRESULT;
 typedef _Return_type_success_(return >= 0) long HRESULT;
 #endif // _Return_type_success_
 #endif // !_HRESULT_DEFINED
-#endif // _WIN32
+#endif // _MSC_VER
 
 #include "dxc/Support/exception.h"
 #include "dxc/WinAdapter.h"
@@ -102,7 +102,7 @@ void CheckLLVMErrorCode(const std::error_code &ec);
 
 #define SAFE_DELETE_ARRAY(p)                                                   \
   {                                                                            \
-    delete[](p);                                                               \
+    delete[] (p);                                                              \
     p = nullptr;                                                               \
   }
 #define SAFE_DELETE(p)                                                         \
@@ -187,7 +187,9 @@ void CheckLLVMErrorCode(const std::error_code &ec);
     }                                                                          \
   }
 #define IFTLLVM(x)                                                             \
-  { CheckLLVMErrorCode(x); }
+  {                                                                            \
+    CheckLLVMErrorCode(x);                                                     \
+  }
 #define IFTMSG(x, msg)                                                         \
   {                                                                            \
     HRESULT __hr = (x);                                                        \
@@ -281,7 +283,7 @@ inline void OutputDebugFormatA(const char *pszFormat, ...) {
 
 #ifndef NDEBUG
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 // DXASSERT is used to debug break when 'exp' evaluates to false and is only
 //     intended for internal developer use. It is compiled out in free
@@ -304,7 +306,15 @@ inline void OutputDebugFormatA(const char *pszFormat, ...) {
       __debugbreak();                                                          \
     }                                                                          \
   } while (0)
-#define DXASSERT(exp, msg) DXASSERT_ARGS(exp, msg)
+#define DXASSERT(exp, msg)                                                     \
+  do {                                                                         \
+    if (!(exp)) {                                                              \
+      OutputDebugFormatA("Error: \t%s\nFile:\n%s(%d)\nFunc:\t%s.\n\t%s\n",     \
+                         "!(" #exp ")", __FILE__, __LINE__, __FUNCTION__,      \
+                         msg);                                                 \
+      __debugbreak();                                                          \
+    }                                                                          \
+  } while (0)
 
 #define DXASSERT_LOCALVAR(local, exp, msg) DXASSERT(exp, msg)
 
@@ -314,7 +324,7 @@ inline void OutputDebugFormatA(const char *pszFormat, ...) {
 
 #define DXVERIFY_NOMSG(exp) DXASSERT(exp, "")
 
-#else // _WIN32
+#else // _MSC_VER
 #include <cassert>
 
 #define DXASSERT_NOMSG assert
@@ -341,7 +351,7 @@ inline void OutputDebugFormatA(const char *pszFormat, ...) {
     }                                                                          \
   } while (0)
 
-#endif // _WIN32
+#endif // _MSC_VER
 
 #else // NDEBUG
 

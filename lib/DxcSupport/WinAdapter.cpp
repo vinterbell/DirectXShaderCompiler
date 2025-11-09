@@ -10,18 +10,8 @@
 #include "assert.h"
 #include "dxc/Support/WinFunctions.h"
 #include "dxc/Support/WinIncludes.h"
+
 #ifndef _WIN32
-
-#include "dxc/Support/Unicode.h"
-
-//===--------------------------- CAllocator -------------------------------===//
-
-void *CAllocator::Reallocate(void *p, size_t nBytes) throw() {
-  return realloc(p, nBytes);
-}
-void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
-void CAllocator::Free(void *p) throw() { free(p); }
-
 //===--------------------------- BSTR Allocation --------------------------===//
 
 void SysFreeString(BSTR bstrString) {
@@ -60,6 +50,20 @@ unsigned int SysStringLen(const BSTR bstrString) {
 
   return blobIn[0] / sizeof(OLECHAR);
 }
+
+#endif
+
+#ifndef _MSC_VER
+
+#include "dxc/Support/Unicode.h"
+
+//===--------------------------- CAllocator -------------------------------===//
+
+void *CAllocator::Reallocate(void *p, size_t nBytes) throw() {
+  return realloc(p, nBytes);
+}
+void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
+void CAllocator::Free(void *p) throw() { free(p); }
 
 //===--------------------------- CHandle -------------------------------===//
 

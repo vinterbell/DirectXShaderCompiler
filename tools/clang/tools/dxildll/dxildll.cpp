@@ -10,10 +10,12 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef DXC_API_IMPORT
 #ifdef _WIN32
 #define DXC_API_IMPORT
 #else
 #define DXC_API_IMPORT __attribute__((visibility("default")))
+#endif
 #endif
 
 #include "dxc/DxilContainer/DxcContainerBuilder.h"
@@ -22,10 +24,10 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
 #include <algorithm>
-#ifdef _WIN32
-#include "Tracing/DxcRuntimeEtw.h"
-#include "dxc/Tracing/dxcetw.h"
-#endif
+// #ifdef _WIN32
+// #include "Tracing/DxcRuntimeEtw.h"
+// #include "dxc/Tracing/dxcetw.h"
+// #endif
 
 #include "dxc/dxcisense.h"
 #include "dxc/dxctools.h"
@@ -67,25 +69,25 @@ void __attribute__((destructor)) DllShutdown() {
 
 #pragma warning(disable : 4290)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID) {
-  if (Reason == DLL_PROCESS_ATTACH) {
-    EventRegisterMicrosoft_Windows_DxcRuntime_API();
-    DxcRuntimeEtw_DxcRuntimeInitialization_Start();
-    HRESULT HR = InitMaybeFail();
-    DxcRuntimeEtw_DxcRuntimeInitialization_Stop(HR);
-    if (FAILED(HR)) {
-      EventUnregisterMicrosoft_Windows_DxcRuntime_API();
-      return HR;
-    }
-  } else if (Reason == DLL_PROCESS_DETACH) {
-    DxcRuntimeEtw_DxcRuntimeShutdown_Start();
-    DxcSetThreadMallocToDefault();
-    ::llvm::sys::fs::CleanupPerThreadFileSystem();
-    ::llvm::llvm_shutdown();
-    DxcClearThreadMalloc();
-    DxcCleanupThreadMalloc();
-    DxcRuntimeEtw_DxcRuntimeShutdown_Stop(S_OK);
-    EventUnregisterMicrosoft_Windows_DxcRuntime_API();
-  }
+  // if (Reason == DLL_PROCESS_ATTACH) {
+  //   EventRegisterMicrosoft_Windows_DxcRuntime_API();
+  //   DxcRuntimeEtw_DxcRuntimeInitialization_Start();
+  //   HRESULT HR = InitMaybeFail();
+  //   DxcRuntimeEtw_DxcRuntimeInitialization_Stop(HR);
+  //   if (FAILED(HR)) {
+  //     EventUnregisterMicrosoft_Windows_DxcRuntime_API();
+  //     return HR;
+  //   }
+  // } else if (Reason == DLL_PROCESS_DETACH) {
+  //   DxcRuntimeEtw_DxcRuntimeShutdown_Start();
+  //   DxcSetThreadMallocToDefault();
+  //   ::llvm::sys::fs::CleanupPerThreadFileSystem();
+  //   ::llvm::llvm_shutdown();
+  //   DxcClearThreadMalloc();
+  //   DxcCleanupThreadMalloc();
+  //   DxcRuntimeEtw_DxcRuntimeShutdown_Stop(S_OK);
+  //   EventUnregisterMicrosoft_Windows_DxcRuntime_API();
+  // }
 
   return TRUE;
 }
@@ -131,10 +133,10 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID RCLSID, REFIID RIID,
 DXC_API_IMPORT HRESULT __stdcall DxcCreateInstance(REFCLSID RCLSID, REFIID RIID,
                                                    LPVOID *V) {
   HRESULT HR = S_OK;
-  DxcEtw_DXCompilerCreateInstance_Start();
+  // DxcEtw_DXCompilerCreateInstance_Start();
   DxcThreadMalloc TM(nullptr);
   HR = ThreadMallocDxcCreateInstance(RCLSID, RIID, V);
-  DxcEtw_DXCompilerCreateInstance_Stop(HR);
+  // DxcEtw_DXCompilerCreateInstance_Stop(HR);
   return HR;
 }
 
@@ -144,9 +146,9 @@ DXC_API_IMPORT HRESULT __stdcall DxcCreateInstance2(IMalloc *Malloc,
   if (V == nullptr)
     return E_POINTER;
   HRESULT HR = S_OK;
-  DxcEtw_DXCompilerCreateInstance_Start();
+  // DxcEtw_DXCompilerCreateInstance_Start();
   DxcThreadMalloc TM(Malloc);
   HR = ThreadMallocDxcCreateInstance(RCLSID, RIID, V);
-  DxcEtw_DXCompilerCreateInstance_Stop(HR);
+  // DxcEtw_DXCompilerCreateInstance_Stop(HR);
   return HR;
 }

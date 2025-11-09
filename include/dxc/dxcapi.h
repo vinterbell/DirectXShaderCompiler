@@ -25,6 +25,10 @@
 
 #ifdef _WIN32
 
+#ifndef _MSC_VER
+#include "WinAdapter.h"
+#endif
+
 #ifndef CROSS_PLATFORM_UUIDOF
 // Warning: This macro exists in WinAdapter.h as well
 #define CROSS_PLATFORM_UUIDOF(interface, spec)                                 \
