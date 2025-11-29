@@ -1455,6 +1455,7 @@ public:
 
 // RAII style mechanism for setting/unsetting a locale for the specified Windows
 // codepage
+#ifdef __linux__
 class ScopedLocale {
   locale_t Utf8Locale = nullptr;
   locale_t PrevLocale = nullptr;
@@ -1487,6 +1488,24 @@ public:
     Utf8Locale = nullptr;
   }
 };
+#else
+class ScopedLocale {
+  const char *m_prevLocale;
+
+public:
+  explicit ScopedLocale(uint32_t codePage)
+      : m_prevLocale(setlocale(LC_ALL, nullptr)) {
+    assert((codePage == CP_UTF8) &&
+           "Support for Linux only handles UTF8 code pages");
+    setlocale(LC_ALL, "en_US.UTF-8");
+  }
+  ~ScopedLocale() {
+    if (m_prevLocale != nullptr) {
+      setlocale(LC_ALL, m_prevLocale);
+    }
+  }
+};
+#endif // __linux__
 
 // The t_nBufferLength parameter is part of the published interface, but not
 // used here.
