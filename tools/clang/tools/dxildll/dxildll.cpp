@@ -69,25 +69,25 @@ void __attribute__((destructor)) DllShutdown() {
 
 #pragma warning(disable : 4290)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID) {
-  // if (Reason == DLL_PROCESS_ATTACH) {
-  //   EventRegisterMicrosoft_Windows_DxcRuntime_API();
-  //   DxcRuntimeEtw_DxcRuntimeInitialization_Start();
-  //   HRESULT HR = InitMaybeFail();
-  //   DxcRuntimeEtw_DxcRuntimeInitialization_Stop(HR);
-  //   if (FAILED(HR)) {
-  //     EventUnregisterMicrosoft_Windows_DxcRuntime_API();
-  //     return HR;
-  //   }
-  // } else if (Reason == DLL_PROCESS_DETACH) {
-  //   DxcRuntimeEtw_DxcRuntimeShutdown_Start();
-  //   DxcSetThreadMallocToDefault();
-  //   ::llvm::sys::fs::CleanupPerThreadFileSystem();
-  //   ::llvm::llvm_shutdown();
-  //   DxcClearThreadMalloc();
-  //   DxcCleanupThreadMalloc();
-  //   DxcRuntimeEtw_DxcRuntimeShutdown_Stop(S_OK);
-  //   EventUnregisterMicrosoft_Windows_DxcRuntime_API();
-  // }
+  if (Reason == DLL_PROCESS_ATTACH) {
+    // EventRegisterMicrosoft_Windows_DxcRuntime_API();
+    // DxcRuntimeEtw_DxcRuntimeInitialization_Start();
+    HRESULT HR = InitMaybeFail();
+    // DxcRuntimeEtw_DxcRuntimeInitialization_Stop(HR);
+    if (FAILED(HR)) {
+      // EventUnregisterMicrosoft_Windows_DxcRuntime_API();
+      return HR;
+    }
+  } else if (Reason == DLL_PROCESS_DETACH) {
+    // DxcRuntimeEtw_DxcRuntimeShutdown_Start();
+    DxcSetThreadMallocToDefault();
+    ::llvm::sys::fs::CleanupPerThreadFileSystem();
+    ::llvm::llvm_shutdown();
+    DxcClearThreadMalloc();
+    DxcCleanupThreadMalloc();
+    // DxcRuntimeEtw_DxcRuntimeShutdown_Stop(S_OK);
+    // EventUnregisterMicrosoft_Windows_DxcRuntime_API();
+  }
 
   return TRUE;
 }
@@ -140,9 +140,8 @@ DXC_API_IMPORT HRESULT __stdcall DxcCreateInstance(REFCLSID RCLSID, REFIID RIID,
   return HR;
 }
 
-DXC_API_IMPORT HRESULT __stdcall DxcCreateInstance2(IMalloc *Malloc,
-                                                    REFCLSID RCLSID,
-                                                    REFIID RIID, LPVOID *V) {
+DXC_API_IMPORT HRESULT __stdcall
+DxcCreateInstance2(IMalloc *Malloc, REFCLSID RCLSID, REFIID RIID, LPVOID *V) {
   if (V == nullptr)
     return E_POINTER;
   HRESULT HR = S_OK;
